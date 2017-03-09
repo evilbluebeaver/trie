@@ -8,13 +8,13 @@
 %%% implementation.
 %%%
 %%% BSD LICENSE
-%%% 
+%%%
 %%% Copyright (c) 2010-2015, Michael Truog <mjtruog at gmail dot com>
 %%% All rights reserved.
-%%% 
+%%%
 %%% Redistribution and use in source and binary forms, with or without
 %%% modification, are permitted provided that the following conditions are met:
-%%% 
+%%%
 %%%     * Redistributions of source code must retain the above copyright
 %%%       notice, this list of conditions and the following disclaimer.
 %%%     * Redistributions in binary form must reproduce the above copyright
@@ -27,7 +27,7 @@
 %%%     * The name of the author may not be used to endorse or promote
 %%%       products derived from this software without specific prior
 %%%       written permission
-%%% 
+%%%
 %%% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
 %%% CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
 %%% INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -747,6 +747,121 @@ fold_similar_element(foldr, F, A, Key, Node) ->
 
 %%-------------------------------------------------------------------------
 %% @doc
+%% ===Fold a function over the keys within a trie that share a specified prefix.===
+%% Traverses in alphabetical order.
+%% @end
+%%-------------------------------------------------------------------------
+
+-spec fold_suffixes(Prefix :: ?TYPE_NAME(),
+                    F :: fun((?TYPE_NAME(), any(), any()) -> any()),
+                    A :: any(),
+                    Node :: trie()) -> any().
+
+fold_suffixes(Suffixes, F, A, Node) ->
+    foldl_suffixes(Suffixes, F, A, Node).
+
+%%-------------------------------------------------------------------------
+%% @doc
+%% ===Fold a function over the keys within a trie that share a specified prefix.===
+%% Traverses in alphabetical order.
+%% @end
+%%-------------------------------------------------------------------------
+
+-spec foldl_suffixes(Prefix :: ?TYPE_NAME(),
+                     F :: fun((?TYPE_NAME(), any(), any()) -> any()),
+                     A :: any(),
+                     Node :: trie()) -> any().
+
+foldl_suffixes(?TYPE_H0_, _, A, {I0, I1, _})
+    when is_integer(H), H < I0;
+         is_integer(H), H > I1 ->
+    A;
+
+foldl_suffixes(_, _, A, ?TYPE_EMPTY) ->
+    A;
+
+foldl_suffixes(?TYPE_H0T0, F, A, Node) ->
+    fold_suffixes_node(H, T, foldl, F, A, ?TYPE_EMPTY, error, Node).
+
+%%-------------------------------------------------------------------------
+%% @doc
+%% ===Fold a function over the keys within a trie that share a specified prefix in reverse.===
+%% Traverses in reverse alphabetical order.
+%% @end
+%%-------------------------------------------------------------------------
+
+-spec foldr_suffixes(Prefix :: ?TYPE_NAME(),
+                     F :: fun((?TYPE_NAME(), any(), any()) -> any()),
+                     A :: any(),
+                     Node :: trie()) -> any().
+
+foldr_suffixes(?TYPE_H0_, _, A, {I0, I1, _})
+    when is_integer(H), H < I0;
+         is_integer(H), H > I1 ->
+    A;
+
+foldr_suffixes(_, _, A, ?TYPE_EMPTY) ->
+    A;
+
+foldr_suffixes(?TYPE_H0T0, F, A, Node) ->
+    fold_suffixes_node(H, T, foldr, F, A, ?TYPE_EMPTY, error, Node).
+
+fold_suffixes_node(H, _, _Fold, _F, A, _Key, _LastValue, {I0, I1, _})
+    when is_integer(H), H < I0;
+         is_integer(H), H > I1 ->
+    io:format("1 ~p", [H]),
+    A;
+
+fold_suffixes_node(H, ?TYPE_EMPTY, Fold, F, A, Key, _, {I0, _, Data})
+    when is_integer(H) ->
+    io:format("2 ~p", [H]),
+    {ChildNode, Value} = erlang:element(H - I0 + 1, Data),
+    if
+        is_tuple(ChildNode) ->
+            NewKey = ?TYPE_KEYH0,
+            if
+                Value =:= error ->
+                    fold_suffixes_element(Fold, F, A, NewKey, ChildNode);
+                Fold =:= foldl ->
+                    fold_suffixes_element(Fold, F, F(NewKey, Value, A),
+                                         NewKey, ChildNode);
+                Fold =:= foldr ->
+                    F(NewKey, Value,
+                      fold_suffixes_element(Fold, F, A, NewKey, ChildNode))
+            end;
+        Value =/= error, ?TYPE_CHECK(ChildNode)  ->
+            F(?TYPE_KEYH0CHILDNODE, Value, A);
+        true ->
+            A
+    end;
+
+fold_suffixes_node(H, T, Fold, F, A, Key, _, {I0, _, Data})
+    when is_integer(H) ->
+    io:format("3 ~p", [H]),
+    {ChildNode, Value} = erlang:element(H - I0 + 1, Data),
+    if
+        is_tuple(ChildNode) ->
+            ?TYPE_H1T1 = T,
+            fold_suffixes_node(H1, T1, Fold, F, A,
+                ?TYPE_KEYH0, Value, ChildNode);
+        Value =/= error, ?TYPE_CHECK(ChildNode) ->
+            case ?TYPE_PREFIX(T, ChildNode) of
+                true ->
+                    F(?TYPE_KEYH0CHILDNODE, Value, A);
+                false ->
+                    A
+            end;
+        true ->
+            A
+    end.
+
+fold_suffixes_element(foldl, F, A, Key, Node) ->
+    foldl(F, A, Key, Node);
+
+fold_suffixes_element(foldr, F, A, Key, Node) ->
+    foldr(F, A, Key, Node).
+%%-------------------------------------------------------------------------
+%% @doc
 %% ===Call a function for each element.===
 %% Traverses in alphabetical order.
 %% @end
@@ -1085,7 +1200,7 @@ store_node(H, ?TYPE_H1T1 = T, NewValue, {I0, I1, Data})
 
 to_list(Node) ->
     foldr(fun (Key, Value, L) -> [{Key, Value} | L] end, [], Node).
-        
+
 %%-------------------------------------------------------------------------
 %% @doc
 %% ===Return a list of all entries within a trie that share a common prefix.===

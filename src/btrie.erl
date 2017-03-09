@@ -17,13 +17,13 @@
 %%% @end
 %%%
 %%% BSD LICENSE
-%%% 
+%%%
 %%% Copyright (c) 2010-2013, Michael Truog <mjtruog at gmail dot com>
 %%% All rights reserved.
-%%% 
+%%%
 %%% Redistribution and use in source and binary forms, with or without
 %%% modification, are permitted provided that the following conditions are met:
-%%% 
+%%%
 %%%     * Redistributions of source code must retain the above copyright
 %%%       notice, this list of conditions and the following disclaimer.
 %%%     * Redistributions in binary form must reproduce the above copyright
@@ -36,7 +36,7 @@
 %%%     * The name of the author may not be used to endorse or promote
 %%%       products derived from this software without specific prior
 %%%       written permission
-%%% 
+%%%
 %%% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
 %%% CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
 %%% INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
@@ -79,6 +79,9 @@
          fold_similar/4,
          foldl_similar/4,
          foldr_similar/4,
+         fold_suffixes/4,
+         foldl_suffixes/4,
+         foldr_suffixes/4,
          foreach/2,
          from_list/1,
          is_key/2,
@@ -116,7 +119,7 @@ test() ->
     {97,97,{{<<"b">>,empty}}} = btrie:new([<<"ab">>]),
     {97,97,{{<<"bc">>,empty}}} = btrie:new([<<"abc">>]),
     {97,97,{{<<"b">>,empty}}} = btrie:new([<<"ab">>]),
-    {97,97,{{{97,98,{{<<>>,empty},{<<>>,empty}}},error}}} = 
+    {97,97,{{{97,98,{{<<>>,empty},{<<>>,empty}}},error}}} =
         btrie:new([<<"ab">>,<<"aa">>]),
     {97,97,{{{97,98,{{<<"c">>,empty},{<<"c">>,empty}}},error}}} =
         btrie:new([<<"abc">>,<<"aac">>]),

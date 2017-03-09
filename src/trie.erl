@@ -19,7 +19,7 @@
 %%% @end
 %%%
 %%% BSD LICENSE
-%%% 
+%%%
 %%% Copyright (c) 2010-2016, Michael Truog <mjtruog at gmail dot com>
 %%% All rights reserved.
 %%%
@@ -84,6 +84,9 @@
          fold_similar/4,
          foldl_similar/4,
          foldr_similar/4,
+         fold_suffixes/4,
+         foldl_suffixes/4,
+         foldr_suffixes/4,
          foreach/2,
          from_list/1,
          is_key/2,
